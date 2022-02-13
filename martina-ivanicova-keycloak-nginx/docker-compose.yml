@@ -1,0 +1,41 @@
+version: '3.3'
+services:
+  nginx_rproxy: 
+    image: nginx:latest
+    container_name: nginx_rproxy
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./www:/data/www  
+    ports:
+      - 80:80
+  mykeycloak:
+    image: jboss/keycloak:latest
+    container_name: mykeycloak
+    restart: unless-stopped    
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=${KEYCLOAK_PASSWORD}
+      - PROXY_ADDRESS_FORWARDING=true  #important for reverse proxy
+      - DB_VENDOR=mysql      
+      - DB_ADDR=mysql     
+      - DB_PORT=3306 
+      - DB_DATABASE=keycloak
+      - DB_PASSWORD=${DB_KEYCLOAK_PASSWORD} 
+      - DB_KEYCLOAK_USER=keycloak_admin
+    depends_on:
+        - mysql
+  mysql:
+      image: mysql:5.7
+      volumes:
+        - mysql_data:/var/lib/mysql
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: keycloak
+        MYSQL_USER: keycloak
+        MYSQL_PASSWORD: mytopsecret
+
+volumes:
+  mysql_data:
+      driver: local
+
